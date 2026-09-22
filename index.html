@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a20">
+  <meta name="description" content="Volt Energy Systems busbar heating design calculator">
+  <title>Busbar Designer · Volt Energy Systems</title>
+  <link rel="icon" href="assets/volt-logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="topline wrap"><span>VOLT ENERGY SYSTEMS</span><span>ENGINEERING TOOLS / 01</span></div>
+    <div class="header-main wrap">
+      <div class="header-copy">
+        <div class="eyebrow"><span class="indicator"></span> MODULE DESIGN TOOL</div>
+        <h1>Busbar <em>Designer.</em></h1>
+        <p>Short-circuit and continuous-current heating, brought together in one clear design view.</p>
+      </div>
+      <img class="brand-logo" src="assets/volt-logo.png" alt="Volt Energy Systems logo">
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="toolbar no-print">
+      <div class="toolbar-left"><span class="status-dot"></span><strong id="save-status">Saved in this browser</strong><span class="subtle">Based on your supplied workbook</span></div>
+      <div class="toolbar-actions">
+        <button type="button" id="reset-btn" class="button secondary">Reset example</button>
+        <button type="button" id="import-btn" class="button secondary">Import design</button>
+        <button type="button" id="export-btn" class="button secondary">Export design</button>
+        <button type="button" id="print-btn" class="button primary">Print / save PDF</button>
+        <input type="file" id="import-file" accept=".json,application/json" hidden>
+      </div>
+    </div>
+
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+    <section class="overview" id="overview" aria-labelledby="overview-title">
+      <div class="section-heading"><div><span class="kicker">01 / LIVE RESULTS</span><h2 id="overview-title">Design overview</h2></div><span class="live-label">●&nbsp; UPDATES AS YOU EDIT</span></div>
+      <div class="metrics">
+        <article class="metric metric-dark"><div class="metric-label">PREDICTED FAULT CURRENT</div><div class="metric-value" id="fault-current">—</div><div class="metric-caption">Pack open-circuit voltage ÷ total loop resistance</div><span class="metric-decoration">⚡</span></article>
+        <article class="metric"><div class="metric-label">SELECTED SECTION · SHORT CIRCUIT</div><div class="metric-value" id="fault-temperature">—</div><div class="metric-caption"><span id="fault-section-name">—</span> · <span id="fault-verdict" class="pill">—</span></div></article>
+        <article class="metric"><div class="metric-label">CONTINUOUS · HOTTEST SECTION</div><div class="metric-value" id="continuous-temperature">—</div><div class="metric-caption"><span id="hottest-name">—</span> · <span id="continuous-verdict" class="pill">—</span></div></article>
+        <article class="metric"><div class="metric-label">CONTINUOUS SECTION CHECK</div><div class="metric-value" id="section-count">—</div><div class="metric-caption" id="section-count-caption">—</div></article>
+      </div>
+      <p class="notice" id="overview-note">The short-circuit summary follows the selected section in the workbook. Review every section in the tables below.</p>
+    </section>
+
+    <div class="workspace">
+      <div class="inputs-column" id="inputs">
+        <div class="section-heading"><div><span class="kicker">02 / DESIGN INPUTS</span><h2>Set your design</h2></div></div>
+
+        <section class="panel input-panel" aria-labelledby="pack-heading">
+          <div class="panel-title"><span class="step">01</span><div><h3 id="pack-heading">Pack &amp; material</h3><p>Define the voltage source and conductor properties.</p></div></div>
+          <div class="field-grid">
+            <label class="field"><span>Material</span><select data-field="material" id="material-select"></select></label>
+            <label class="field"><span>Cell model</span><select data-field="cell" id="cell-select"></select></label>
+            <label class="field"><span>Cells in series <small>S</small></span><input data-field="series" type="number" min="1" step="1"></label>
+            <label class="field"><span>Cells in parallel <small>P</small></span><input data-field="parallel" type="number" min="1" step="1"></label>
+            <label class="field"><span>Cell DCIR <small>mΩ</small></span><input data-cell="dcir" type="number" min="0" step="any"></label>
+            <label class="field"><span>Cell max voltage <small>V</small></span><input data-cell="voltage" type="number" min="0" step="any"></label>
+            <label class="field"><span>Main busbar length <small>m</small></span><input data-field="spineLengthM" type="number" min="0" step="any"></label>
+            <label class="field"><span>Main busbar area <small>mm²</small></span><input data-field="spineAreaMm2" type="number" min="0" step="any"></label>
+            <label class="field"><span>Weld resistance / cell <small>mΩ</small></span><input data-field="weldMilliOhm" type="number" min="0" step="any"></label>
+            <label class="field"><span>Other series resistance <small>mΩ</small></span><input data-field="otherMilliOhm" type="number" min="0" step="any"></label>
+          </div>
+          <p class="helper">Main busbar area is an independent loop-resistance input in the workbook. It does not automatically use the “Main spine” section width × thickness below.</p>
+          <details class="advanced"><summary>Material reference properties <span>EDIT VALUES</span></summary>
+            <div class="field-grid advanced-fields">
+              <label class="field"><span>Resistivity at 20 °C <small>Ω·m</small></span><input data-material="rho20" type="number" min="0" step="any"></label>
+              <label class="field"><span>Specific heat <small>J/kg·K</small></span><input data-material="cp" type="number" min="0" step="any"></label>
+              <label class="field"><span>Density <small>kg/m³</small></span><input data-material="density" type="number" min="0" step="any"></label>
+              <label class="field"><span>Temperature coefficient <small>1/K</small></span><input data-material="alpha" type="number" min="0" step="any"></label>
+              <label class="field"><span>Thermal conductivity <small>W/m·K</small></span><input data-material="k" type="number" min="0" step="any"></label>
+            </div>
+            <p class="helper">Workbook reference values for pure annealed metals; confirm against the actual alloy and temper.</p>
+          </details>
+        </section>
+
+        <section class="panel input-panel" aria-labelledby="fault-heading">
+          <div class="panel-title"><span class="step">02</span><div><h3 id="fault-heading">Short-circuit scenario</h3><p>Fault initiation, protection and temperature limit.</p></div></div>
+          <div class="field-grid">
+            <label class="field"><span>External short resistance <small>mΩ</small></span><input data-field="externalMilliOhm" type="number" min="0" step="any"></label>
+            <label class="field"><span>Hot-start temperature <small>°C</small></span><input data-field="hotStartC" type="number" step="any"></label>
+            <label class="field"><span>Clearing time <small>ms</small></span><input data-field="clearingMs" type="number" min="0" step="any"></label>
+            <label class="field"><span>Temperature limit <small>°C</small></span><input data-field="limitC" type="number" step="any"></label>
+            <label class="field field-full"><span>Selected section for detail</span><select data-field="selectedSectionId" id="selected-section"></select></label>
+          </div>
+          <p class="assumption"><strong>Check these assumptions:</strong> clearing time against the protection device, temperature limit against plating/weld/polymer ratings, and cell DCIR at the condition giving the highest fault current.</p>
+        </section>
+
+        <section class="panel input-panel" aria-labelledby="continuous-heading">
+          <div class="panel-title"><span class="step">03</span><div><h3 id="continuous-heading">Continuous operation</h3><p>Current, exposure and heat transfer.</p></div></div>
+          <div class="field-grid">
+            <label class="field"><span>Pack current <small>A</small></span><input data-field="continuousA" type="number" min="0" step="any"></label>
+            <label class="field"><span>Duration <small>s</small></span><input data-field="durationS" type="number" min="0" step="any"></label>
+            <label class="field"><span>Ambient / start temperature <small>°C</small></span><input data-field="ambientC" type="number" step="any"></label>
+            <label class="field"><span>Heat transfer coefficient <small>W/m²·K</small></span><input data-field="heatTransfer" type="number" min="0" step="any"></label>
+          </div>
+          <p class="assumption"><strong>Key assumption:</strong> the heat transfer coefficient depends on packaging and airflow. The workbook starts at 50 W/m²·K; confirm the real thermal environment.</p>
+        </section>
+      </div>
+
+      <div class="results-column">
+        <div class="section-heading"><div><span class="kicker">03 / ELECTRICAL & THERMAL</span><h2>See the working</h2></div></div>
+        <section class="panel" aria-labelledby="breakdown-heading">
+          <div class="panel-title"><span class="step light">↗</span><div><h3 id="breakdown-heading">Fault loop breakdown</h3><p>The resistance behind the predicted short-circuit current.</p></div></div>
+          <div class="row-table" id="resistance-table"></div>
+          <div class="summary-line"><span>Pack open-circuit voltage</span><strong id="pack-voltage">—</strong></div>
+        </section>
+        <section class="panel" aria-labelledby="selected-heading">
+          <div class="panel-title"><span class="step light">°</span><div><h3 id="selected-heading">Selected section</h3><p id="selected-description">Short-circuit detail</p></div></div>
+          <div class="detail-grid" id="selected-metrics"></div>
+          <div id="adiabatic-note" class="insight"></div>
+        </section>
+        <section class="panel" aria-labelledby="curve-heading">
+          <div class="panel-title"><span class="step light">⌁</span><div><h3 id="curve-heading">Continuous temperature curve</h3><p>Predicted temperature over the chosen duration.</p></div></div>
+          <div class="chart-key"><i></i><span id="curve-name">Selected section</span><b class="limit-key"></b>Temperature limit</div>
+          <svg id="curve-chart" class="chart" viewBox="0 0 560 250" role="img" aria-label="Continuous section temperature over time"></svg>
+          <p class="helper">Model fixes resistivity at ambient temperature and treats the full rectangular perimeter as cooled.</p>
+        </section>
+      </div>
+    </div>
+
+    <section id="geometry" class="table-section" aria-labelledby="geometry-heading">
+      <div class="section-heading"><div><span class="kicker">04 / SECTION GEOMETRY</span><h2 id="geometry-heading">Map every current path</h2><p>Current divisor = number of identical parallel paths at that location.</p></div><button type="button" id="add-section" class="button secondary no-print">+ Add section</button></div>
+      <p class="notice">All 13 workbook rows start included, including nine example “Custom” rows. Edit or exclude placeholders that do not exist in your module; they affect the overall verdict. Current divisors are separate inputs and do not change automatically when you edit the parallel cell count.</p>
+      <div class="table-scroll"><table class="data-table geometry-table"><thead><tr><th>Include</th><th>Section name</th><th>Width <small>mm</small></th><th>Thickness <small>mm</small></th><th>Current divisor</th><th>Feature length <small>mm</small></th><th class="no-print"></th></tr></thead><tbody id="geometry-body"></tbody></table></div>
+    </section>
+
+    <section id="results" class="table-section" aria-labelledby="results-heading">
+      <div class="section-heading"><div><span class="kicker">05 / ALL SECTIONS</span><h2 id="results-heading">Compare section performance</h2></div><button type="button" id="csv-btn" class="button secondary no-print">Download results CSV</button></div>
+      <div class="table-tabs" role="tablist" aria-label="Section result views"><button type="button" role="tab" id="fault-tab" aria-controls="fault-pane" aria-selected="true">Short-circuit results</button><button type="button" role="tab" id="continuous-tab" aria-controls="continuous-pane" aria-selected="false">Continuous results</button></div>
+      <div id="fault-pane" role="tabpanel" aria-labelledby="fault-tab" class="table-scroll"><table class="data-table"><thead><tr><th>Section</th><th>Area <small>mm²</small></th><th>Current <small>A</small></th><th>Density <small>A/mm²</small></th><th>Rise <small>K</small></th><th>Final <small>°C</small></th><th>Max clear <small>ms</small></th><th>Result</th></tr></thead><tbody id="fault-body"></tbody></table></div>
+      <div id="continuous-pane" role="tabpanel" aria-labelledby="continuous-tab" class="table-scroll" hidden><table class="data-table"><thead><tr><th>Section</th><th>Area <small>mm²</small></th><th>Current <small>A</small></th><th>Density <small>A/mm²</small></th><th>Heat <small>W/m</small></th><th>τ <small>s</small></th><th>At duration <small>°C</small></th><th>Steady <small>°C</small></th><th>Result</th></tr></thead><tbody id="continuous-body"></tbody></table></div>
+    </section>
+
+    <section class="methodology" id="method"><div><span class="kicker">06 / ENGINEERING NOTES</span><h2>Know what the model assumes.</h2></div><div class="method-grid"><article><span>01</span><h3>Short circuit</h3><p>Fixed pack open-circuit voltage and cell DCIR. Adiabatic conductor heating at resistivity corrected to the hot-start temperature. Cell voltage collapse and temperature-dependent resistance during the fault are not modelled.</p></article><article><span>02</span><h3>Continuous current</h3><p>Lumped temperature response per unit length: heat input I²ρ/A, heat loss hPΔT and time constant density·A·Cp/(hP). No axial conduction or weld heating; all four conductor faces are assumed exposed.</p></article><article><span>03</span><h3>Design review</h3><p>The workbook labels many inputs as provisional. Verify CAD dimensions, cell DCIR across state of charge and temperature, clearing-time and I²t characteristics, real heat transfer, plating and adjacent component limits before using results for a design decision.</p></article></div></section>
+  </main>
+  <footer><div class="wrap footer-inner"><span>VOLT ENERGY SYSTEMS <b>●</b> BUSBAR DESIGNER</span><span>Engineering calculation aid · Based on supplied workbook</span></div></footer>
+</body>
+</html>
